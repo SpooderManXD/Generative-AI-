@@ -41,4 +41,4 @@ while True:
     # Optionally, keep only the last 10 messages to manage context length
     messages = messages[-10:]
 
-
+# this is a test
