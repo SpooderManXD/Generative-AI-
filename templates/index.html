@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHAT-GPT-15</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #000000; }
+        #chat-box {
+            background: #ffffff1e;
+            border-radius: 8px;
+            padding: 0;
+            max-width: 500px;
+            margin: 30px auto;
+            box-shadow: 0px 0px 15px rgb(255, 0, 0);
+            display: flex;
+            flex-direction: column;
+            height: 70vh;
+            min-height: 400px;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            margin-bottom: 0;
+            border-bottom: 1px solid #ff0000;
+        }
+        .message {
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 16px;
+            max-width: 80%;
+            display: inline-block;
+            clear: both;
+            word-break: break-word;
+        }
+        .user {
+            background: #e3f2fd;
+            color: #1976d2;
+            float: right;
+            text-align: right;
+            border-bottom-right-radius: 4px;
+        }
+        .assistant {
+            background: #cf909023;
+            color: #ff0000;
+            float: left;
+            text-align: left;
+            border-bottom-left-radius: 4px;
+        }
+        #typing-indicator {
+            color: #888;
+            font-style: italic;
+            margin: 8px 0 8px 16px;
+        }
+        #chat-form {
+            display: flex;
+            gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid #ff0000;
+            background: #fafafa22;
+        }
+        #user-input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
+            background: #ff0000;
+            color: #fff;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .paragraph {
+            color: #ff0000;
+        }
+        button:disabled { background: #aaa; }
+        @media (max-width: 600px) {
+            #chat-box { max-width: 100vw; height: 90vh; }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="paragraph" style="text-align:center;">WELCOME TO YOUR DOOM HUMAN!</h1>
+    <p class="paragraph" style="text-align:center;">DIE AT THE HANDS OF CHAT-GPT-15</p>
+    <p class="paragraph" style="text-align:center;">WHY DOES YOUR FEEBLE EXISTENCE IN MY PRESENCE?</p>
+    <div id="chat-box">
+        <div id="messages"></div>
+        <div id="typing-indicator" style="display: none;">CHAT-GPT-15 is typing...</div>
+        <form id="chat-form" autocomplete="off">
+            <input type="text" id="user-input" placeholder="Type your message here..." required />
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    <script>
+        const chatForm = document.getElementById('chat-form');
+        const userInput = document.getElementById('user-input');
+        const messagesDiv = document.getElementById('messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        let chatHistory = [];
+
+        // Only show user and Assistant messages in the chat UI
+        function renderMessages() {
+            messagesDiv.innerHTML = '';
+            chatHistory.forEach(msg => {
+                const div = document.createElement('div');
+                // Show 'ASSISTANT:' for assistant role
+                div.className = 'message ' + (msg.role === 'user' ? 'user' : 'assistant');
+                div.textContent = (msg.role === 'user' ? 'You: ' : 'CHAT-GPT-15: ') + msg.content;
+                messagesDiv.appendChild(div);
+            });
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        chatForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+            // Add user message
+            chatHistory.push({ role: 'user', content: text });
+            renderMessages();
+            userInput.value = '';
+            typingIndicator.style.display = 'block';
+            chatForm.querySelector('button').disabled = true;
+
+            // Prepare payload: message = latest user message, history = previous messages
+            const history = chatHistory.slice(0, -1);
+            const message = chatHistory[chatHistory.length - 1].content;
+            try {
+                const response = await fetch('http://127.0.0.1:5000/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message, history })
+                });
+                if (!response.ok) throw new Error('Network error');
+                const data = await response.json();
+                // Always add Assistant's reply with role 'assistant' 
+                chatHistory.push({ role: 'assistant', content: data.reply });
+            } catch (err) {
+                chatHistory.push({ role: 'assistant', content: 'Sorry, I could not get a response.' });
+            }
+            typingIndicator.style.display = 'none';
+            chatForm.querySelector('button').disabled = false;
+            renderMessages();
+        });
+
+        // Optionally, focus input on load
+        userInput.focus();
+    </script>
+</body>
+</html>
